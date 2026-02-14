@@ -140,6 +140,18 @@ def reorient_to_ras(img: sitk.Image) -> sitk.Image:
     # Ensure direction is set; if missing, keep as is.
     return img
 
+# 在 resample_isotropic 前加
+def ensure_3d_float(img: sitk.Image) -> sitk.Image:
+    dim = img.GetDimension()
+    if dim == 4:
+        size = list(img.GetSize())      # [x,y,z,t]
+        index = [0, 0, 0, 0]
+        size[3] = 0                     # extract t=0
+        img = sitk.Extract(img, size, index)
+    elif dim != 3:
+        raise ValueError(f"Unsupported image dimension: {dim}")
+    return sitk.Cast(img, sitk.sitkFloat32)
+
 def resample_isotropic(img: sitk.Image, out_spacing: Tuple[float, float, float]) -> sitk.Image:
     in_spacing = img.GetSpacing()
     in_size = img.GetSize()
@@ -313,6 +325,7 @@ def process_one_subject(best: Dict, out_root: Path,
 
     # Load and preprocess
     img = load_nifti_sitk(nii_path)
+    img = ensure_3d_float(img)
     img = reorient_to_ras(img)
     img = resample_isotropic(img, target_spacing)
 
@@ -350,7 +363,7 @@ def main():
     ap.add_argument("--root", required=True, type=str, help="ADNI root folder, e.g. /data/ADNI1")
     ap.add_argument("--out", required=True, type=str, help="Output root folder")
     ap.add_argument("--target_spacing", nargs=3, type=float, default=[1.0, 1.0, 1.0])
-    ap.add_argument("--target_shape", nargs=3, type=int, default=[160, 192, 160], help="(z y x)")
+    ap.add_argument("--target_shape", nargs=3, type=int, default=[192, 192, 192], help="(z y x)")
     ap.add_argument("--do_n4", type=int, default=1, help="1 to enable N4 bias correction")
     ap.add_argument("--norm", type=str, default="zscore", choices=["zscore", "pminmax"])
     ap.add_argument("--save_npy", type=int, default=0)
@@ -378,15 +391,18 @@ def main():
         if best is None or best["score"] == 0:
             results.append({"subject_id": sid, "status": "skip_no_mprage"})
             continue
-        res = process_one_subject(
-            best=best,
-            out_root=out,
-            target_spacing=target_spacing,
-            target_shape=target_shape,
-            do_n4=do_n4,
-            norm_method=args.norm,
-            save_npy=save_npy
-        )
+        try:
+            res = process_one_subject(
+                best=best,
+                out_root=out,
+                target_spacing=target_spacing,
+                target_shape=target_shape,
+                do_n4=do_n4,
+                norm_method=args.norm,
+                save_npy=save_npy
+            )
+        except Exception as e:
+            res = {"subject_id": sid, "status": "fail_exception", "error": str(e)}
         results.append(res)
 
     # Save a small manifest
