@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import random
-from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -56,14 +55,13 @@ def _ask_one(file_id: str, filename: str, file_path: Path, question: str) -> Dic
 
 def run_async_qa(
     scan_path: str,
-    max_workers: int = 4,
     seed: int | None = 42,
 ) -> List[Dict]:
     """
     Main callable function for other scripts.
     1) recursively find .nii.gz
     2) randomly pick one question per file
-    3) asynchronously call DeepSeek function
+    3) synchronously call DeepSeek function file-by-file
     4) keep all results in memory (for next-step JSON injection)
     """
     root = Path(scan_path).expanduser().resolve()
@@ -80,27 +78,19 @@ def run_async_qa(
         return []
 
     results: List[Dict] = []
-    future_to_meta: Dict[Future, Tuple[str, str, Path, str]] = {}
-
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        for file_id, filename, file_path in targets:
-            q = random.choice(QUESTION_POOL)
-            fut = executor.submit(_ask_one, file_id, filename, file_path, q)
-            future_to_meta[fut] = (file_id, filename, file_path, q)
-
-        for fut in as_completed(future_to_meta):
-            file_id, filename, file_path, q = future_to_meta[fut]
-            try:
-                result = fut.result()
-            except Exception as exc:
-                result = {
-                    "id": file_id,
-                    "filename": filename,
-                    "path": str(file_path),
-                    "question": q,
-                    "answer": f"[ERROR] {exc}",
-                }
-            results.append(result)
+    for file_id, filename, file_path in targets:
+        q = random.choice(QUESTION_POOL)
+        try:
+            result = _ask_one(file_id, filename, file_path, q)
+        except Exception as exc:
+            result = {
+                "id": file_id,
+                "filename": filename,
+                "path": str(file_path),
+                "question": q,
+                "answer": f"[ERROR] {exc}",
+            }
+        results.append(result)
 
     results.sort(key=lambda x: x["path"])
     return results
@@ -108,10 +98,9 @@ def run_async_qa(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Recursively scan .nii.gz files and ask random questions via local_deepseek_image_description."
+        description="Recursively scan .nii.gz files and ask random questions synchronously via local_deepseek_image_description."
     )
     parser.add_argument("scan_path", type=str, help="Folder path to recursively scan .nii.gz files")
-    parser.add_argument("--max_workers", type=int, default=4, help="Thread pool size")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for question selection")
     parser.add_argument(
         "--print_json",
@@ -122,7 +111,6 @@ def main() -> None:
 
     records = run_async_qa(
         scan_path=args.scan_path,
-        max_workers=max(1, args.max_workers),
         seed=args.seed,
     )
 
