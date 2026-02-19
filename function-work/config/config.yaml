@@ -1,0 +1,9 @@
+local:
+  deepseek:
+    address: "http://localhost:11434/api/generate"
+    model: "deepseek"
+
+data:
+  local:
+    classification:
+      alz_image:
