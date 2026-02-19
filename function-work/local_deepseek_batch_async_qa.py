@@ -22,11 +22,10 @@ from local_deepseek_image_description import ask_nii_question
 
 # Leave question list here for easy customization.
 QUESTION_POOL: List[str] = [
-    "请简要描述这个MRI文件可能包含的解剖结构信息。",
-    "这个NIfTI文件的维度和体素间距信息可能说明了什么？",
-    "从医学影像处理角度，这个文件在分析前需要哪些预处理？",
-    "请说明该图像可能的质量风险和注意事项。",
-    "如果用于阿尔兹海默症研究，这个文件可以支持哪些基础分析？",
+    "Illustrate the image through a descriptive explanation。",
+    "Present a compact description of the photo key features.",
+    "Explain the various aspects of the image before you.",
+    "Share a comprehensive rundown of the presented image.",
 ]
 
 
