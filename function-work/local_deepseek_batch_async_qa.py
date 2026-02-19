@@ -113,7 +113,7 @@ def main() -> None:
         scan_path=args.scan_path,
         seed=args.seed,
     )
-
+    final_records = [Dict]
     print(f"[INFO] total files: {len(records)}")
     if records:
         print(f"[INFO] sample id: {records[0]['id']}")
@@ -121,9 +121,31 @@ def main() -> None:
         print(f"[INFO] sample question: {records[0]['question']}")
         print(f"[INFO] sample answer: {records[0]['answer'][:200]}")
 
-    if args.print_json:
-        print(json.dumps(records, ensure_ascii=False, indent=2))
+    for i in range(len(records)):
+        final_record = {
+            "id": records[i]["id"],
+            "filename": records[i]["filename"],
+            "conversation": [
+                {
+                    "from": "human",
+                    "value": records[i]['question']
+                },
+                {
+                    "from": "gpt",
+                    "value": records[i]['answer']
+                }
+            ]
+        }
+        final_records.append(final_record)
 
+    # if args.print_json:
+    #     print(json.dumps(records, ensure_ascii=False, indent=2))
+    out_path = Path("records.json")
+    out_path.write_text(
+        json.dumps(final_records, ensure_ascii=False, indent=2),
+        encoding="utf-8"
+    )
+    print(f"saved: {out_path.resolve()}")
 
 if __name__ == "__main__":
     main()
