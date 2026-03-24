@@ -21,8 +21,9 @@ def convert_nii_to_niigz(root_dir: Path) -> tuple[int, int]:
         with nii_path.open("rb") as source, gzip.open(gz_path, "wb") as target:
             shutil.copyfileobj(source, target)
 
+        nii_path.unlink()
         converted_count += 1
-        print(f"Converted: {nii_path} -> {gz_path}")
+        print(f"Converted and removed source: {nii_path} -> {gz_path}")
 
     return converted_count, skipped_count
 
