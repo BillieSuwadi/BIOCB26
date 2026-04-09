@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import argparse
-import gzip
-import shutil
 from pathlib import Path
+
+import SimpleITK as sitk
 
 
 def convert_nii_to_niigz(root_dir: Path) -> tuple[int, int]:
@@ -18,8 +18,8 @@ def convert_nii_to_niigz(root_dir: Path) -> tuple[int, int]:
             print(f"Skip existing file: {gz_path}")
             continue
 
-        with nii_path.open("rb") as source, gzip.open(gz_path, "wb") as target:
-            shutil.copyfileobj(source, target)
+        image = sitk.ReadImage(str(nii_path))
+        sitk.WriteImage(image, str(gz_path))
 
         nii_path.unlink()
         converted_count += 1
