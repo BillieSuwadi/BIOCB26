@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import time
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -78,6 +79,7 @@ def run_async_qa(
         return []
 
     results: List[Dict] = []
+    count = 0
     for file_id, filename, file_path in targets:
         q = random.choice(QUESTION_POOL)
         try:
@@ -91,6 +93,8 @@ def run_async_qa(
                 "answer": f"[ERROR] {exc}",
             }
         results.append(result)
+        print("file:{0}/{1} answered, time:{2}, fileName:{3}".format(count, len(targets), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), filename))
+        count += 1
 
     results.sort(key=lambda x: x["path"])
     return results

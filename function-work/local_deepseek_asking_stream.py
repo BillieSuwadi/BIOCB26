@@ -3,7 +3,7 @@ import json
 
 API_URL = "http://localhost:11434/api/generate"
 data = {
-    "model": "deepseek",
+    "model": "deepseek-r1:70b",
     "prompt": "解释一下数据库事务的ACID特性，用通俗的语言",
     "stream": True,  # 开启流式输出
     "temperature": 0.5

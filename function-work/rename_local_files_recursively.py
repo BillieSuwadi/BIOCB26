@@ -19,7 +19,7 @@ def build_new_name(root: Path, nii_file: Path) -> str:
     if not parts:
         # If .nii.gz appears directly under root, fallback to original stem.
         return f"{nii_file.stem}.nii.gz"
-    return "_".join(parts) + ".nii.gz"
+    return "***".join(parts) + ".nii.gz"
 
 
 def unique_path(path: Path) -> Path:

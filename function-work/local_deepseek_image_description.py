@@ -12,7 +12,7 @@ import requests
 
 
 API_URL = "http://localhost:11434/api/generate"
-MODEL_NAME = "deepseek"
+MODEL_NAME = "deepseek-r1:70b"
 REQUEST_TIMEOUT = 120
 
 # Thread-local session: safe for multi-threaded callers and avoids cross-thread state sharing.
@@ -82,7 +82,7 @@ def _build_prompt(file_info: Dict[str, Any], question: str) -> str:
         "If data is insufficient, state the limitation clearly.\n\n"
         f"NIfTI metadata:\n{json.dumps(file_info, ensure_ascii=False, indent=2)}\n\n"
         f"Question:\n{question}\n\n"
-        "Answer in concise Chinese."
+        "Answer in concise English please."
     )
 
 
