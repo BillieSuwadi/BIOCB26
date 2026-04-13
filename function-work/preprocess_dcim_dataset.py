@@ -325,7 +325,6 @@ def process_one_subject(best: Dict, out_root: Path,
 
     # Load and preprocess
     img = load_nifti_sitk(nii_path)
-    img = ensure_3d_float(img)
     img = reorient_to_ras(img)
     img = resample_isotropic(img, target_spacing)
 
@@ -363,7 +362,7 @@ def main():
     ap.add_argument("--root", required=True, type=str, help="ADNI root folder, e.g. /data/ADNI1")
     ap.add_argument("--out", required=True, type=str, help="Output root folder")
     ap.add_argument("--target_spacing", nargs=3, type=float, default=[1.0, 1.0, 1.0])
-    ap.add_argument("--target_shape", nargs=3, type=int, default=[192, 192, 192], help="(z y x)")
+    ap.add_argument("--target_shape", nargs=3, type=int, default=[214, 214, 214], help="(z y x)")
     ap.add_argument("--do_n4", type=int, default=1, help="1 to enable N4 bias correction")
     ap.add_argument("--norm", type=str, default="zscore", choices=["zscore", "pminmax"])
     ap.add_argument("--save_npy", type=int, default=0)

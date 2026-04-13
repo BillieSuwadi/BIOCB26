@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import random
+import time
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -78,6 +79,7 @@ def run_async_qa(
         return []
 
     results: List[Dict] = []
+    count = 0
     for file_id, filename, file_path in targets:
         q = random.choice(QUESTION_POOL)
         try:
@@ -91,6 +93,8 @@ def run_async_qa(
                 "answer": f"[ERROR] {exc}",
             }
         results.append(result)
+        print("file:{0}/{1} answered, time:{2}, fileName:{3}".format(count, len(targets), time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), filename))
+        count += 1
 
     results.sort(key=lambda x: x["path"])
     return results
@@ -102,18 +106,18 @@ def main() -> None:
     )
     parser.add_argument("scan_path", type=str, help="Folder path to recursively scan .nii.gz files")
     parser.add_argument("--seed", type=int, default=42, help="Random seed for question selection")
-    parser.add_argument(
-        "--print_json",
-        action="store_true",
-        help="Print collected records in JSON format (does not save file).",
-    )
+    # parser.add_argument(
+    #     "--print_json",
+    #     action="store_true",
+    #     help="Print collected records in JSON format (does not save file).",
+    # )
     args = parser.parse_args()
 
     records = run_async_qa(
         scan_path=args.scan_path,
         seed=args.seed,
     )
-    final_records = [Dict]
+    final_records: List[Dict] = []
     print(f"[INFO] total files: {len(records)}")
     if records:
         print(f"[INFO] sample id: {records[0]['id']}")
@@ -140,7 +144,7 @@ def main() -> None:
 
     # if args.print_json:
     #     print(json.dumps(records, ensure_ascii=False, indent=2))
-    out_path = Path("records.json")
+    out_path = Path(args.scan_path + "records.json")
     out_path.write_text(
         json.dumps(final_records, ensure_ascii=False, indent=2),
         encoding="utf-8"
